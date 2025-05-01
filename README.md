@@ -16,5 +16,5 @@ bash <(curl -sL https://raw.githubusercontent.com/kirito201711/One-click-install
 - ✔️ 支持 systemd 服务管理
 - ✔️ 自动设置监听端口和密码
 - ✔️ 包含服务状态监控
-- ✔️ 支持 Ubuntu/Debian/CentOS
-
+- ✔️ 支持 Ubuntu/Debian
+- 使用此脚本ip被封责任自负
