@@ -16,12 +16,28 @@ BINARY_DIR="/usr/local/bin"
 BINARY_NAME="anytls-server"
 SERVICE_NAME="anytls"
 
-# 获取本机IPv4地址
+# 改进的IP获取函数
 get_ip() {
-    local ip=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n 1)
-    [ -z "$ip" ] && ip=$(curl -4 -s ifconfig.me)
+    # 尝试多种方法获取IP
+    local ip=""
+    # 方法1: 通过ip命令获取
+    ip=$(ip -o -4 addr show scope global | awk '{print $4}' | cut -d'/' -f1 | head -n1)
+    
+    # 方法2: 通过ifconfig获取
+    [ -z "$ip" ] && ip=$(ifconfig 2>/dev/null | grep -oP 'inet \K[\d.]+' | grep -v '127.0.0.1' | head -n1)
+    
+    # 方法3: 通过公网API获取
+    [ -z "$ip" ] && ip=$(curl -4 -s --connect-timeout 3 ifconfig.me 2>/dev/null || curl -4 -s --connect-timeout 3 icanhazip.com 2>/dev/null)
+    
+    # 最终检查
+    if [ -z "$ip" ]; then
+        echo "未能自动获取IP，请手动输入服务器IP地址"
+        read -p "请输入服务器IP地址: " ip
+    fi
+    
     echo "$ip"
 }
+
 # 显示菜单
 function show_menu() {
     clear
@@ -100,18 +116,24 @@ EOF
     # 清理
     rm -f "$ZIP_FILE"
 
+    # 获取服务器IP
+    SERVER_IP=$(get_ip)
+
     # 验证
-   echo -e "\n\033[32m√ 安装完成！\033[0m"
-echo -e "\033[32m√ 服务名称: $SERVICE_NAME\033[0m"
-echo -e "\033[32m√ 监听端口: 0.0.0.0:8443\033[0m"
-echo -e "\033[32m√ 密码已设置为: $PASSWORD\033[0m"
-echo -e "\n\033[33m管理命令:\033[0m"
-echo -e "  启动: systemctl start $SERVICE_NAME"
-echo -e "  停止: systemctl stop $SERVICE_NAME"
-echo -e "  重启: systemctl restart $SERVICE_NAME"
-echo -e "  状态: systemctl status $SERVICE_NAME"
-echo -e "\n\033[36m\033[1m〓 NekoBox连接信息 〓\033[0m"
-echo -e "\033[30;43m\033[1m anytls://$PASSWORD@$SERVER_IP:8443/?insecure=1 \033[0m"
+    echo -e "\n\033[32m√ 安装完成！\033[0m"
+    echo -e "\033[32m√ 服务名称: $SERVICE_NAME\033[0m"
+    echo -e "\033[32m√ 监听端口: 0.0.0.0:8443\033[0m"
+    echo -e "\033[32m√ 密码已设置为: $PASSWORD\033[0m"
+    echo -e "\n\033[33m管理命令:\033[0m"
+    echo -e "  启动: systemctl start $SERVICE_NAME"
+    echo -e "  停止: systemctl stop $SERVICE_NAME"
+    echo -e "  重启: systemctl restart $SERVICE_NAME"
+    echo -e "  状态: systemctl status $SERVICE_NAME"
+    
+    # 高亮显示连接信息
+    echo -e "\n\033[36m\033[1m〓 NekoBox连接信息 〓\033[0m"
+    echo -e "\033[30;43m\033[1m anytls://$PASSWORD@$SERVER_IP:8443/?insecure=1 \033[0m"
+    echo -e "\033[33m\033[1m请妥善保管此连接信息！\033[0m"
 }
 
 # 卸载功能
