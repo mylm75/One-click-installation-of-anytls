@@ -2,6 +2,7 @@
 
 # anytls 安装/卸载管理脚本
 # 功能：安装 anytls 或彻底卸载（含 systemd 服务清理）
+# 支持架构：amd64 (x86_64)、arm64 (aarch64)
 
 # 检查 root 权限
 if [ "$(id -u)" -ne 0 ]; then
@@ -9,9 +10,18 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# 自动检测系统架构
+ARCH=$(uname -m)
+case $ARCH in
+    x86_64)  BINARY_ARCH="amd64" ;;
+    aarch64) BINARY_ARCH="arm64" ;;
+    armv7l)  BINARY_ARCH="armv7" ;;
+    *)       echo "不支持的架构: $ARCH"; exit 1 ;;
+esac
+
 # 配置参数
-DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v0.0.8/anytls_0.0.8_linux_amd64.zip"
-ZIP_FILE="/tmp/anytls_0.0.8_linux_amd64.zip"
+DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v0.0.8/anytls_0.0.8_linux_${BINARY_ARCH}.zip"
+ZIP_FILE="/tmp/anytls_0.0.8_linux_${BINARY_ARCH}.zip"
 BINARY_DIR="/usr/local/bin"
 BINARY_NAME="anytls-server"
 SERVICE_NAME="anytls"
@@ -42,7 +52,7 @@ get_ip() {
 function show_menu() {
     clear
     echo "-------------------------------------"
-    echo " anytls 服务管理脚本 (Ubuntu/Debian) "
+    echo " anytls 服务管理脚本 (${BINARY_ARCH}架构) "
     echo "-------------------------------------"
     echo "1. 安装 anytls"
     echo "2. 卸载 anytls"
@@ -69,16 +79,18 @@ function install_anytls() {
     fi
 
     # 下载
-    echo "[1/5] 下载 anytls..."
+    echo "[1/5] 下载 anytls (${BINARY_ARCH}架构)..."
     wget "$DOWNLOAD_URL" -O "$ZIP_FILE" || {
-        echo "下载失败！请检查网络。"
+        echo "下载失败！可能原因："
+        echo "1. 网络连接问题"
+        echo "2. 该架构的二进制文件不存在"
         exit 1
     }
 
     # 解压
     echo "[2/5] 解压文件..."
     unzip -o "$ZIP_FILE" -d "$BINARY_DIR" || {
-        echo "解压失败！"
+        echo "解压失败！文件可能损坏"
         exit 1
     }
     chmod +x "$BINARY_DIR/$BINARY_NAME"
@@ -121,6 +133,7 @@ EOF
 
     # 验证
     echo -e "\n\033[32m√ 安装完成！\033[0m"
+    echo -e "\033[32m√ 架构类型: ${BINARY_ARCH}\033[0m"
     echo -e "\033[32m√ 服务名称: $SERVICE_NAME\033[0m"
     echo -e "\033[32m√ 监听端口: 0.0.0.0:8443\033[0m"
     echo -e "\033[32m√ 密码已设置为: $PASSWORD\033[0m"
