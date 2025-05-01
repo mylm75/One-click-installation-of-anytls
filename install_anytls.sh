@@ -16,6 +16,12 @@ BINARY_DIR="/usr/local/bin"
 BINARY_NAME="anytls-server"
 SERVICE_NAME="anytls"
 
+# 获取本机IPv4地址
+get_ip() {
+    local ip=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -v '127.0.0.1' | head -n 1)
+    [ -z "$ip" ] && ip=$(curl -4 -s ifconfig.me)
+    echo "$ip"
+}
 # 显示菜单
 function show_menu() {
     clear
@@ -104,7 +110,8 @@ echo -e "  启动: systemctl start $SERVICE_NAME"
 echo -e "  停止: systemctl stop $SERVICE_NAME"
 echo -e "  重启: systemctl restart $SERVICE_NAME"
 echo -e "  状态: systemctl status $SERVICE_NAME"
-echo -e "  日志: journalctl -u $SERVICE_NAME -f"
+echo -e "\n\033[36m\033[1m〓 NekoBox连接信息 〓\033[0m"
+echo -e "\033[30;43m\033[1m anytls://$PASSWORD@$SERVER_IP:8443/?insecure=1 \033[0m"
 }
 
 # 卸载功能
