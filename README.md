@@ -8,11 +8,13 @@
 
 ```bash
 bash <(curl -sL https://raw.githubusercontent.com/kirito201711/One-click-installation-of-anytls/main/install_anytls.sh)
+```
 
 ## 功能特性
 
 - ✔️ 全自动安装配置
 - ✔️ 支持 systemd 服务管理
-- ✔️ 支持 Ubuntu/Debian
-
+- ✔️ 自动设置监听端口和密码
+- ✔️ 包含服务状态监控
+- ✔️ 支持 Ubuntu/Debian/CentOS
 
