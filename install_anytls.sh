@@ -39,7 +39,7 @@ case $ARCH in
 esac
 
 # 配置参数（注意这里去掉了 linux_ 后面多余的空格）
-DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v0.0.8/anytls_0.0.8_linux_ ${BINARY_ARCH}.zip"
+DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v0.0.8/anytls_0.0.8_linux_${BINARY_ARCH}.zip"
 ZIP_FILE="/tmp/anytls_0.0.8_linux_${BINARY_ARCH}.zip"
 BINARY_DIR="/usr/local/bin"
 BINARY_NAME="anytls-server"
