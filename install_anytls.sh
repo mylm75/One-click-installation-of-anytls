@@ -2,13 +2,32 @@
 
 # anytls 安装/卸载管理脚本
 # 功能：安装 anytls 或彻底卸载（含 systemd 服务清理）
-# 支持架构：amd64 (x86_64)、arm64 (aarch64)
+# 支持架构：amd64 (x86_64)、arm64 (aarch64)、armv7 (armv7l)
 
 # 检查 root 权限
 if [ "$(id -u)" -ne 0 ]; then
     echo "必须使用 root 或 sudo 运行！"
     exit 1
 fi
+
+# 安装必要工具：wget, curl, unzip
+function install_dependencies() {
+    echo "[初始化] 正在安装必要依赖（wget, curl, unzip）..."
+    apt update -y >/dev/null 2>&1
+
+    for dep in wget curl unzip; do
+        if ! command -v $dep &>/dev/null; then
+            echo "正在安装 $dep..."
+            apt install -y $dep || {
+                echo "无法安装依赖: $dep，请手动运行 'sudo apt install $dep' 后再继续。"
+                exit 1
+            }
+        fi
+    done
+}
+
+# 调用依赖安装函数
+install_dependencies
 
 # 自动检测系统架构
 ARCH=$(uname -m)
@@ -20,7 +39,7 @@ case $ARCH in
 esac
 
 # 配置参数
-DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v0.0.8/anytls_0.0.8_linux_${BINARY_ARCH}.zip"
+DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v0.0.8/anytls_0.0.8_linux_ ${BINARY_ARCH}.zip"
 ZIP_FILE="/tmp/anytls_0.0.8_linux_${BINARY_ARCH}.zip"
 BINARY_DIR="/usr/local/bin"
 BINARY_NAME="anytls-server"
@@ -28,18 +47,11 @@ SERVICE_NAME="anytls"
 
 # 改进的IP获取函数
 get_ip() {
-    # 尝试多种方法获取IP
     local ip=""
-    # 方法1: 通过ip命令获取
     ip=$(ip -o -4 addr show scope global | awk '{print $4}' | cut -d'/' -f1 | head -n1)
-    
-    # 方法2: 通过ifconfig获取
     [ -z "$ip" ] && ip=$(ifconfig 2>/dev/null | grep -oP 'inet \K[\d.]+' | grep -v '127.0.0.1' | head -n1)
-    
-    # 方法3: 通过公网API获取
     [ -z "$ip" ] && ip=$(curl -4 -s --connect-timeout 3 ifconfig.me 2>/dev/null || curl -4 -s --connect-timeout 3 icanhazip.com 2>/dev/null)
     
-    # 最终检查
     if [ -z "$ip" ]; then
         echo "未能自动获取IP，请手动输入服务器IP地址"
         read -p "请输入服务器IP地址: " ip
@@ -69,15 +81,6 @@ function show_menu() {
 
 # 安装功能
 function install_anytls() {
-    # 检查依赖
-    if ! command -v unzip &> /dev/null; then
-        echo "安装依赖: unzip..."
-        apt update && apt install -y unzip || {
-            echo "依赖安装失败！请手动运行: sudo apt-get install unzip"
-            exit 1
-        }
-    fi
-
     # 下载
     echo "[1/5] 下载 anytls (${BINARY_ARCH}架构)..."
     wget "$DOWNLOAD_URL" -O "$ZIP_FILE" || {
