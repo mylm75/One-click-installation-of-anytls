@@ -148,7 +148,7 @@ EOF
     
     # 高亮显示连接信息
     echo -e "\n\033[36m\033[1m〓 NekoBox连接信息 〓\033[0m"
-    echo -e "\033[30;43m\033[1m anytls://$PASSWORD@$SERVER_IP:8443/?insecure=1 \033[0m"
+    echo -e "\033[30;43m\033[1m anytls://$PASSWORD@$SERVER_IP:5443/?insecure=1 \033[0m"
     echo -e "\033[33m\033[1m请妥善保管此连接信息！\033[0m"
 }
 
